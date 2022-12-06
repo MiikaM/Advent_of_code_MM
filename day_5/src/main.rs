@@ -8,9 +8,21 @@ use std::{
 
 fn main() {
     let now = Instant::now();
-    let _args: Vec<String> = env::args().collect();
-    // let file_path = &args[1];
-    let file_path = "./puzzle/input.txt";
+    let args: Vec<String> = env::args().collect();
+    // let file_path: &str = &args[1];
+    let file_path: &str = "./puzzle/input.txt";
+    let contents: String = read_file(file_path);
+    // do something with the contents
+    let parsed_input: (Vec<String>, Vec<String>) = parse_input(contents);
+    println!(
+        "Time it took to run: {} seconds",
+        now.elapsed().as_secs_f64()
+    );
+
+    println!("Result");
+}
+
+fn read_file(file_path: &str) -> String {
     let result = fs::read_to_string(file_path);
     let contents = match result {
         Ok(message) => message,
@@ -21,16 +33,12 @@ fn main() {
             _ => panic!("There was an error reading the file: {error:?}"),
         },
     };
-    // do something with the contents
-    let parsed_input = parse_input(contents);
-    println!(
-        "Time it took to run: {} seconds",
-        now.elapsed().as_secs_f64()
-    );
 
-    println!("Result");
+    contents
 }
-
+/*
+    Differentiating input between the instruction set and the crates and Transforming these into Vector representations of the data.
+*/
 fn parse_input(input: String) -> (Vec<String>, Vec<String>) {
     let (crates, instructions): (&str, &str) = input.split_once("\r\n\r\n").unwrap();
 
