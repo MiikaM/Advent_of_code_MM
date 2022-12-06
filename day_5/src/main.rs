@@ -1,4 +1,10 @@
-use std::{env, fs, io, time::Instant, vec};
+use std::{
+    env,
+    fs::{self, create_dir},
+    io,
+    time::Instant,
+    vec,
+};
 
 fn main() {
     let now = Instant::now();
@@ -16,7 +22,7 @@ fn main() {
         },
     };
     // do something with the contents
-    let parsed_input = parse_input(&contents);
+    let parsed_input = parse_input(contents);
     println!(
         "Time it took to run: {} seconds",
         now.elapsed().as_secs_f64()
@@ -25,34 +31,54 @@ fn main() {
     println!("Result");
 }
 
-fn parse_input<'a>(input: &'a String) -> (Vec<&'a str>, Vec<&'a str>) {
+fn parse_input(input: String) -> (Vec<String>, Vec<String>) {
     let (crates, instructions): (&str, &str) = input.split_once("\r\n\r\n").unwrap();
 
-    let crate_lines: Vec<&str> = crates.split("\r\n").collect();
-    let instruction_lines: Vec<&str> = instructions.split("\r\n").collect();
-
-    for line in &crate_lines {
-        let stack_numbers: Vec<&str> = line.split("").collect();
-        println!("Length of line: {} and the items: {:?}", stack_numbers.len(), stack_numbers);
-
-        
-    }
-
-    println!("{}", crate_lines.last().unwrap().len());
+    let mut crate_lines: Vec<&str> = crates.split("\r\n").collect();
 
     let stack_line = crate_lines.last().unwrap();
 
-    let stack_numbers: Vec<&str> = stack_line.split(" ").collect();
-    let amount_of_stacks = stack_numbers[stack_numbers.len() - 2].parse::<u8>().unwrap_or(0);
-    let mut stacks:Vec<Vec<&str>> = vec![vec![]; amount_of_stacks.into()];
+    let stack_numbers: Vec<&str> = stack_line.split("").collect();
+    let amount_of_stacks = stack_numbers[stack_numbers.len() - 3]
+        .parse::<u8>()
+        .unwrap_or(0);
 
-    
-    stacks[0].push("test");
-    
+    let mut stacks: Vec<Vec<String>> = vec![vec![]; amount_of_stacks.into()];
 
-    println!("{stacks:?}" );
+    let mut stack_positions: Vec<(u8, usize)> = vec![];
 
-    (instruction_lines, crate_lines)
+    for number in 1..(amount_of_stacks + 1) {
+        let index = stack_numbers
+            .iter()
+            .position(|&r| r == number.to_string())
+            .unwrap_or(0);
+        stack_positions.push((number, index));
+    }
+
+    crate_lines.pop();
+    crate_lines.reverse();
+
+    for (number, index) in stack_positions {
+        for line in &crate_lines {
+            let line_vec: Vec<&str> = line.split("").collect();
+            let mut crate_string = String::new();
+
+            if (line_vec[index] != " ") {
+                crate_string.push_str("[");
+                crate_string.push_str(line_vec[index]);
+                crate_string.push_str("]");
+                stacks[(number - 1) as usize].push(crate_string);
+            }
+        }
+    }
+    let instruction_lines: Vec<&str> = instructions.to_owned().split("\r\n").collect();
+
+    println!(
+        " and length of stacks: , amount of stacks: , stacks: {stacks:?}",
+        // stack_numbers.len(),
+        // amount_of_stacks
+    );
+    (Vec::new(), Vec::new())
 }
 
 fn move_crates() -> () {
