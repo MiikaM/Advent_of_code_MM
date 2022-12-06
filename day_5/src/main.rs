@@ -1,9 +1,8 @@
 use std::{
     env,
-    fs::{self, create_dir},
     io,
     time::Instant,
-    vec,
+    vec, fs,
 };
 
 fn main() {
