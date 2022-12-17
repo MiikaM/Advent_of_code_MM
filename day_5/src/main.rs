@@ -55,6 +55,7 @@ fn parse_input(input: String) -> (Vec<Vec<String>>, Vec<Instruction>) {
     (stacks, instructions)
 }
 
+
 fn parse_graph(crates: &str) -> Vec<Vec<String>> {
     let mut crate_lines: Vec<&str> = crates.split("\r\n").collect();
 
@@ -97,6 +98,7 @@ fn parse_graph(crates: &str) -> Vec<Vec<String>> {
     return stacks;
 }
 
+// Go over the instruction lines and take the relevant information from the lines which are formattted in the way of "move 1 from 2 to 3"
 fn parse_instructions(instructions: &str) -> Vec<Instruction> {
     let instruction_lines: Vec<&str> = instructions.split("\r\n").collect();
 
@@ -139,6 +141,7 @@ fn parse_instructions(instructions: &str) -> Vec<Instruction> {
     instructions_parsed
 }
 
+// Part 1 of the puzzle
 fn move_single_crates(
     stacks: &Vec<Vec<String>>,
     instructions: &Vec<Instruction>,
@@ -153,6 +156,7 @@ fn move_single_crates(
     stacks_cloned
 }
 
+// Get the top elements from each stack
 fn get_top(stacks: Vec<Vec<String>>) -> Vec<(usize, String)> {
     let mut top_elements: Vec<(usize, String)> = Vec::new();
     for (index, stack) in stacks.iter().enumerate() {
@@ -162,6 +166,7 @@ fn get_top(stacks: Vec<Vec<String>>) -> Vec<(usize, String)> {
     top_elements
 }
 
+// Part 2 of the puzzle
 fn move_multiple_crates(
     stacks: &Vec<Vec<String>>,
     instructions: &Vec<Instruction>,
