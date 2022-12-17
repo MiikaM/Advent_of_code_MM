@@ -1,10 +1,11 @@
-use std::{
-    env,
-    io,
-    time::Instant,
-    vec, fs,
-};
+use std::{env, fs, io, time::Instant, vec};
 
+#[derive(Debug, Clone, Copy)]
+struct Instruction {
+    Move: u16,
+    From: u16,
+    To: u16,
+}
 fn main() {
     let now = Instant::now();
     let args: Vec<String> = env::args().collect();
@@ -12,7 +13,14 @@ fn main() {
     let file_path: &str = "./puzzle/input.txt";
     let contents: String = read_file(file_path);
     // do something with the contents
-    let parsed_input: (Vec<String>, Vec<String>) = parse_input(contents);
+    let (stacks, instructions): (Vec<Vec<String>>, Vec<Instruction>) = parse_input(contents);
+    let moved_single_crates: Vec<Vec<String>> = move_single_crates(&stacks, &instructions);
+    let moved_multiple_crates: Vec<Vec<String>> = move_multiple_crates(&stacks, &instructions);
+    let result_part1 = get_top(moved_single_crates);
+    let result_part2 = get_top(moved_multiple_crates);
+    println!("Results => 1: {result_part1:?}");
+    println!("Results => 2: {result_part2:?}");
+
     println!(
         "Time it took to run: {} seconds",
         now.elapsed().as_secs_f64()
@@ -38,9 +46,16 @@ fn read_file(file_path: &str) -> String {
 /*
     Differentiating input between the instruction set and the crates and Transforming these into Vector representations of the data.
 */
-fn parse_input(input: String) -> (Vec<String>, Vec<String>) {
-    let (crates, instructions): (&str, &str) = input.split_once("\r\n\r\n").unwrap();
+fn parse_input(input: String) -> (Vec<Vec<String>>, Vec<Instruction>) {
+    let (crates_string, instructions_string): (&str, &str) = input.split_once("\r\n\r\n").unwrap();
 
+    let stacks: Vec<Vec<String>> = parse_graph(crates_string);
+    let instructions: Vec<Instruction> = parse_instructions(instructions_string);
+
+    (stacks, instructions)
+}
+
+fn parse_graph(crates: &str) -> Vec<Vec<String>> {
     let mut crate_lines: Vec<&str> = crates.split("\r\n").collect();
 
     let stack_line = crate_lines.last().unwrap();
@@ -78,16 +93,87 @@ fn parse_input(input: String) -> (Vec<String>, Vec<String>) {
             }
         }
     }
-    let instruction_lines: Vec<&str> = instructions.to_owned().split("\r\n").collect();
 
-    println!(
-        " and length of stacks: , amount of stacks: , stacks: {stacks:?}",
-        // stack_numbers.len(),
-        // amount_of_stacks
-    );
-    (Vec::new(), Vec::new())
+    return stacks;
 }
 
-fn move_crates() -> () {
-    println!("Move crates")
+fn parse_instructions(instructions: &str) -> Vec<Instruction> {
+    let instruction_lines: Vec<&str> = instructions.split("\r\n").collect();
+
+    let mut instructions_parsed: Vec<Instruction> = Vec::new();
+
+    for line in instruction_lines {
+        let line_strings: Vec<&str> = line.split(" ").collect();
+        let line_instructions: Vec<(String, u16)> = line_strings
+            .iter()
+            .step_by(2)
+            .zip(line_strings.iter().skip(1).step_by(2))
+            .map(|(a, b)| (a.to_string(), b.parse::<u16>().unwrap_or(0)))
+            .collect::<Vec<(String, u16)>>();
+
+        let mut instruction: Instruction = Instruction {
+            Move: 0,
+            From: 0,
+            To: 0,
+        };
+        let movement = line_strings
+            .iter()
+            .position(|x| x.to_string() == String::from("move"))
+            .unwrap();
+        let from = line_strings
+            .iter()
+            .position(|x| x.to_string() == String::from("from"))
+            .unwrap();
+        let to = line_strings
+            .iter()
+            .position(|x| x.to_string() == String::from("to"))
+            .unwrap();
+
+        instruction.Move = line_strings[movement + 1].parse::<u16>().unwrap_or(0);
+        instruction.From = line_strings[from + 1].parse::<u16>().unwrap_or(0) - 1;
+        instruction.To = line_strings[to + 1].parse::<u16>().unwrap_or(0) - 1;
+
+        instructions_parsed.push(instruction);
+    }
+
+    instructions_parsed
+}
+
+fn move_single_crates(
+    stacks: &Vec<Vec<String>>,
+    instructions: &Vec<Instruction>,
+) -> Vec<Vec<String>> {
+    let mut stacks_cloned = stacks.to_vec();
+    for instruction in instructions {
+        for i in 0..instruction.Move {
+            let value = stacks_cloned[(instruction.From) as usize].pop().unwrap();
+            stacks_cloned[(instruction.To) as usize].push(value);
+        }
+    }
+    stacks_cloned
+}
+
+fn get_top(stacks: Vec<Vec<String>>) -> Vec<(usize, String)> {
+    let mut top_elements: Vec<(usize, String)> = Vec::new();
+    for (index, stack) in stacks.iter().enumerate() {
+        top_elements.push((index + 1, stack.last().unwrap().to_string()))
+    }
+
+    top_elements
+}
+
+fn move_multiple_crates(
+    stacks: &Vec<Vec<String>>,
+    instructions: &Vec<Instruction>,
+) -> Vec<Vec<String>> {
+    let mut stacks_cloned = stacks.to_vec();
+    for instruction in instructions {
+        let len = stacks_cloned[instruction.From as usize].len();
+        let split_position = len - instruction.Move as usize;
+        let mut value: Vec<String> =
+            stacks_cloned[(instruction.From) as usize].split_off(split_position);
+
+        stacks_cloned[(instruction.To) as usize].append(&mut value);
+    }
+    stacks_cloned
 }
